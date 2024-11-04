@@ -1,0 +1,4 @@
+litellm_api_base = "https://your-litellm-api-base"
+litellm_api_key  = "your-litellm-api-key"
+model_api_key    = "your-model-api-key"
+model_api_base   = "https://your-model-api-base"
