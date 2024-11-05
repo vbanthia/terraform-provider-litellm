@@ -1,7 +1,8 @@
 terraform {
   required_providers {
     litellm = {
-      source = "local/litellm/litellm"
+      source  = "registry.terraform.io/local/litellm"
+      version = "1.0.0"
     }
   }
 }
@@ -22,25 +23,37 @@ variable "litellm_api_key" {
   sensitive   = true
 }
 
-resource "litellm_model" "test_model" {
-  model_name          = "test-azure-gpt4"
-  custom_llm_provider = "azure"
-  base_model          = "gpt-4"
-  model_api_key       = var.model_api_key
-  model_api_base      = var.model_api_base
-  api_version         = "2023-05-15"
-  rpm                 = 50
-  tpm                 = 80000
-  tier                = "free"
-}
-
-variable "model_api_key" {
+variable "aws_access_key_id" {
   type        = string
-  description = "Model API Key"
+  description = "AWS Access Key ID"
   sensitive   = true
 }
 
-variable "model_api_base" {
+variable "aws_secret_access_key" {
   type        = string
-  description = "Model API Base URL"
+  description = "AWS Secret Access Key"
+  sensitive   = true
+}
+
+variable "aws_region" {
+  type        = string
+  description = "AWS Region"
+  default     = "us-west-2"
+}
+
+resource "litellm_model" "test_aws_bedrock_model" {
+  model_name            = "claude-3.5-sonnet-v2"
+  custom_llm_provider   = "bedrock"
+  base_model            = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+  tier                  = "paid"
+  aws_access_key_id     = var.aws_access_key_id
+  aws_secret_access_key = var.aws_secret_access_key
+  aws_region_name       = var.aws_region
+
+  input_cost_per_million_tokens  = 4.0
+  output_cost_per_million_tokens = 16.0
+}
+
+output "model_id" {
+  value = litellm_model.test_aws_bedrock_model.id
 }

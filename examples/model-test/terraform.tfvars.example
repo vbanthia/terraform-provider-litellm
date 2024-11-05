@@ -1,4 +1,5 @@
-litellm_api_base = "https://your-litellm-api-base"
+litellm_api_base = "http://localhost:4000"
 litellm_api_key  = "your-litellm-api-key"
-model_api_key    = "your-model-api-key"
-model_api_base   = "https://your-model-api-base"
+aws_access_key_id = "your-aws-access-key-id"
+aws_secret_access_key = "your-aws-secret-access-key"
+aws_region = "us-west-2"

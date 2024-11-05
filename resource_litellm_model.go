@@ -25,6 +25,9 @@ type LiteLLMParams struct {
 	Model              string                 `json:"model,omitempty"`
 	InputCostPerToken  float64                `json:"input_cost_per_token,omitempty"`
 	OutputCostPerToken float64                `json:"output_cost_per_token,omitempty"`
+	AWSAccessKeyID     string                 `json:"aws_access_key_id,omitempty"`
+	AWSSecretAccessKey string                 `json:"aws_secret_access_key,omitempty"`
+	AWSRegionName      string                 `json:"aws_region_name,omitempty"`
 	Additional         map[string]interface{} `json:"additionalProp1,omitempty"`
 }
 
@@ -119,6 +122,20 @@ func resourceLiteLLMModel() *schema.Resource {
 				Optional: true,
 				Default:  0.0,
 			},
+			"aws_access_key_id": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+			},
+			"aws_secret_access_key": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+			},
+			"aws_region_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -199,6 +216,9 @@ func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) e
 			Model:              modelName,
 			InputCostPerToken:  inputCostPerToken,
 			OutputCostPerToken: outputCostPerToken,
+			AWSAccessKeyID:     d.Get("aws_access_key_id").(string),
+			AWSSecretAccessKey: d.Get("aws_secret_access_key").(string),
+			AWSRegionName:      d.Get("aws_region_name").(string),
 		},
 		ModelInfo: ModelInfo{
 			ID:        modelID,
@@ -287,6 +307,9 @@ func resourceLiteLLMModelRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("api_version", modelResp.LiteLLMParams.APIVersion)
 	d.Set("base_model", modelResp.ModelInfo.BaseModel)
 	d.Set("tier", modelResp.ModelInfo.Tier)
+	d.Set("aws_access_key_id", modelResp.LiteLLMParams.AWSAccessKeyID)
+	d.Set("aws_secret_access_key", modelResp.LiteLLMParams.AWSSecretAccessKey)
+	d.Set("aws_region_name", modelResp.LiteLLMParams.AWSRegionName)
 
 	return nil
 }
