@@ -63,6 +63,25 @@ For full details on the `litellm_model` resource, see the [model resource docume
 
 ## Development
 
+### Project Structure
+
+The project is organized as follows:
+
+```
+terraform-provider-litellm/
+├── litellm/
+│   ├── provider.go
+│   ├── resource_model.go
+│   ├── resource_model_crud.go
+│   ├── types.go
+│   └── utils.go
+├── main.go
+├── go.mod
+├── go.sum
+├── Makefile
+└── ...
+```
+
 ### Building the Provider
 
 1. Clone the repository
@@ -75,10 +94,22 @@ git clone https://github.com/your-username/terraform-provider-litellm.git
 cd terraform-provider-litellm
 ```
 
-3. Build the provider
+3. Build and install the provider
 ```sh
 make install
 ```
+
+### Development Commands
+
+The Makefile provides several useful commands for development:
+
+- `make build`: Builds the provider
+- `make install`: Builds and installs the provider
+- `make test`: Runs the test suite
+- `make fmt`: Formats the code
+- `make vet`: Runs go vet
+- `make lint`: Runs golangci-lint
+- `make clean`: Removes build artifacts and installed provider
 
 ### Testing
 

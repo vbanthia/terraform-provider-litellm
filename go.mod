@@ -1,4 +1,4 @@
-module terraform-provider-litellm
+module github.com/nicholas-cecere/terraform-provider-litellm
 
 go 1.22.5
 
