@@ -1,5 +1,6 @@
 # Local .terraform directories
 **/.terraform/*
+test_litellm/*
 
 # .tfstate files
 *.tfstate
