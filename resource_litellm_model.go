@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 type LiteLLMParams struct {
@@ -40,6 +41,7 @@ type ModelInfo struct {
 	CreatedBy  string                 `json:"created_by,omitempty"`
 	BaseModel  string                 `json:"base_model,omitempty"`
 	Tier       string                 `json:"tier,omitempty"`
+	Mode       string                 `json:"mode,omitempty"`
 	Additional map[string]interface{} `json:"additionalProp1,omitempty"`
 }
 
@@ -111,6 +113,17 @@ func resourceLiteLLMModel() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "free",
+			},
+			"mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"completion",
+					"embeddings",
+					"image_generation",
+					"moderation",
+					"audio_transcription",
+				}, false),
 			},
 			"input_cost_per_million_tokens": {
 				Type:     schema.TypeFloat,
@@ -225,6 +238,7 @@ func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) e
 			DBModel:   true,
 			BaseModel: baseModel,
 			Tier:      d.Get("tier").(string),
+			Mode:      d.Get("mode").(string),
 		},
 		Additional: make(map[string]interface{}),
 	}
@@ -307,6 +321,7 @@ func resourceLiteLLMModelRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("api_version", modelResp.LiteLLMParams.APIVersion)
 	d.Set("base_model", modelResp.ModelInfo.BaseModel)
 	d.Set("tier", modelResp.ModelInfo.Tier)
+	d.Set("mode", modelResp.ModelInfo.Mode)
 	d.Set("aws_access_key_id", modelResp.LiteLLMParams.AWSAccessKeyID)
 	d.Set("aws_secret_access_key", modelResp.LiteLLMParams.AWSSecretAccessKey)
 	d.Set("aws_region_name", modelResp.LiteLLMParams.AWSRegionName)

@@ -9,6 +9,7 @@ This Terraform provider allows you to manage LiteLLM resources through Infrastru
 - Configure team members and their permissions
 - Set usage limits and budgets
 - Control access to specific models
+- Specify model modes (e.g., completion, embeddings, image generation)
 
 ## Requirements
 
@@ -38,6 +39,7 @@ resource "litellm_model" "claude_aws_bedrock" {
   custom_llm_provider   = "bedrock"
   base_model            = "anthropic.claude-3-5-sonnet-20241022-v2:0"
   tier                  = "paid"
+  mode                  = "completion"  # Specify the model mode
   aws_access_key_id     = var.aws_access_key_id
   aws_secret_access_key = var.aws_secret_access_key
   aws_region_name       = var.aws_region
@@ -46,6 +48,18 @@ resource "litellm_model" "claude_aws_bedrock" {
   output_cost_per_million_tokens = 16.0
 }
 ```
+
+### Model Mode
+
+The `mode` attribute in the `litellm_model` resource allows you to specify the intended use of the model. Available options are:
+
+- `completion`
+- `embeddings`
+- `image_generation`
+- `moderation`
+- `audio_transcription`
+
+This attribute is optional. If not specified, it will not be included in the API request.
 
 ## Development
 
