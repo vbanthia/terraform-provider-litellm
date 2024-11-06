@@ -18,12 +18,14 @@ This Terraform provider allows you to manage LiteLLM resources through Infrastru
 
 ## Using the Provider
 
+To use the LiteLLM provider in your Terraform configuration, you need to declare it in the `terraform` block:
+
 ```hcl
 terraform {
   required_providers {
     litellm = {
-      source  = "local/litellm/litellm"
-      version = "1.0.0"
+      source  = "litellm/litellm"
+      version = "~> 1.0.0"
     }
   }
 }
@@ -32,34 +34,32 @@ provider "litellm" {
   api_base = var.litellm_api_base
   api_key  = var.litellm_api_key
 }
+```
 
-# Example model configuration for AWS Bedrock
-resource "litellm_model" "claude_aws_bedrock" {
-  model_name            = "claude-3.5-sonnet-v2"
-  custom_llm_provider   = "bedrock"
-  base_model            = "anthropic.claude-3-5-sonnet-20241022-v2:0"
-  tier                  = "paid"
-  mode                  = "completion"  # Specify the model mode
-  aws_access_key_id     = var.aws_access_key_id
-  aws_secret_access_key = var.aws_secret_access_key
-  aws_region_name       = var.aws_region
+Then, you can use the provider to manage LiteLLM resources. Here's an example of creating a model configuration:
 
-  input_cost_per_million_tokens  = 4.0
-  output_cost_per_million_tokens = 16.0
+```hcl
+resource "litellm_model" "gpt4" {
+  model_name          = "gpt-4-proxy"
+  custom_llm_provider = "openai"
+  model_api_key       = var.openai_api_key
+  model_api_base      = "https://api.openai.com/v1"
+  base_model          = "gpt-4"
+  tier                = "paid"
+  mode                = "completion"
+  
+  input_cost_per_million_tokens  = 30.0
+  output_cost_per_million_tokens = 60.0
 }
 ```
 
-### Model Mode
+For full details on the `litellm_model` resource, see the [model resource documentation](docs/resources/model.md).
 
-The `mode` attribute in the `litellm_model` resource allows you to specify the intended use of the model. Available options are:
+### Available Resources
 
-- `completion`
-- `embeddings`
-- `image_generation`
-- `moderation`
-- `audio_transcription`
-
-This attribute is optional. If not specified, it will not be included in the API request.
+- `litellm_model`: Manage model configurations. [Documentation](docs/resources/model.md)
+- `litellm_team`: Manage teams. [Documentation](docs/resources/team.md)
+- `litellm_team_member`: Manage team members. [Documentation](docs/resources/team_member.md)
 
 ## Development
 
