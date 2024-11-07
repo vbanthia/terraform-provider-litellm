@@ -108,19 +108,26 @@ func resourceLiteLLMModelRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("failed to read model: %w", err)
 	}
 
-	// Update the state with values from the response
-	d.Set("model_name", modelResp.ModelName)
-	d.Set("custom_llm_provider", modelResp.LiteLLMParams.CustomLLMProvider)
-	d.Set("tpm", modelResp.LiteLLMParams.TPM)
-	d.Set("rpm", modelResp.LiteLLMParams.RPM)
-	d.Set("model_api_base", modelResp.LiteLLMParams.APIBase)
-	d.Set("api_version", modelResp.LiteLLMParams.APIVersion)
-	d.Set("base_model", modelResp.ModelInfo.BaseModel)
-	d.Set("tier", modelResp.ModelInfo.Tier)
-	d.Set("mode", modelResp.ModelInfo.Mode)
-	d.Set("aws_access_key_id", modelResp.LiteLLMParams.AWSAccessKeyID)
-	d.Set("aws_secret_access_key", modelResp.LiteLLMParams.AWSSecretAccessKey)
-	d.Set("aws_region_name", modelResp.LiteLLMParams.AWSRegionName)
+	// Update the state with values from the response or fall back to the data passed in during creation
+	d.Set("model_name", getStringValue(modelResp.ModelName, d.Get("model_name").(string)))
+	d.Set("custom_llm_provider", getStringValue(modelResp.LiteLLMParams.CustomLLMProvider, d.Get("custom_llm_provider").(string)))
+	d.Set("tpm", getIntValue(modelResp.LiteLLMParams.TPM, d.Get("tpm").(int)))
+	d.Set("rpm", getIntValue(modelResp.LiteLLMParams.RPM, d.Get("rpm").(int)))
+	d.Set("model_api_base", getStringValue(modelResp.LiteLLMParams.APIBase, d.Get("model_api_base").(string)))
+	d.Set("api_version", getStringValue(modelResp.LiteLLMParams.APIVersion, d.Get("api_version").(string)))
+	d.Set("base_model", getStringValue(modelResp.ModelInfo.BaseModel, d.Get("base_model").(string)))
+	d.Set("tier", getStringValue(modelResp.ModelInfo.Tier, d.Get("tier").(string)))
+	d.Set("mode", getStringValue(modelResp.ModelInfo.Mode, d.Get("mode").(string)))
+
+	// Store sensitive information
+	d.Set("model_api_key", d.Get("model_api_key"))
+	d.Set("aws_access_key_id", d.Get("aws_access_key_id"))
+	d.Set("aws_secret_access_key", d.Get("aws_secret_access_key"))
+	d.Set("aws_region_name", getStringValue(modelResp.LiteLLMParams.AWSRegionName, d.Get("aws_region_name").(string)))
+
+	// Store cost information
+	d.Set("input_cost_per_million_tokens", d.Get("input_cost_per_million_tokens"))
+	d.Set("output_cost_per_million_tokens", d.Get("output_cost_per_million_tokens"))
 
 	return nil
 }
@@ -180,4 +187,19 @@ func makeRequest(config *ProviderConfig, method, endpoint string, body interface
 
 	client := &http.Client{}
 	return client.Do(req)
+}
+
+// Helper functions to handle potential nil values from the API response
+func getStringValue(apiValue, defaultValue string) string {
+	if apiValue != "" {
+		return apiValue
+	}
+	return defaultValue
+}
+
+func getIntValue(apiValue, defaultValue int) int {
+	if apiValue != 0 {
+		return apiValue
+	}
+	return defaultValue
 }
