@@ -8,7 +8,7 @@ Manages a LiteLLM model configuration. This resource allows you to create, updat
 resource "litellm_model" "gpt4" {
   model_name          = "gpt-4-proxy"
   custom_llm_provider = "openai"
-  model_api_key       = "sk-your-api-key"
+  model_api_key       = var.openai_api_key
   model_api_base      = "https://api.openai.com/v1"
   api_version         = "2023-05-15"
   base_model          = "gpt-4"
@@ -22,9 +22,9 @@ resource "litellm_model" "gpt4" {
   output_cost_per_million_tokens = 60.0    # $0.06 per 1k tokens = $60 per million
 
   # AWS-specific configuration (if applicable)
-  aws_access_key_id     = "your-aws-access-key-id"
-  aws_secret_access_key = "your-aws-secret-access-key"
-  aws_region_name       = "us-west-2"
+  aws_access_key_id     = var.aws_access_key_id
+  aws_secret_access_key = var.aws_secret_access_key
+  aws_region_name       = var.aws_region
 }
 ```
 
@@ -84,3 +84,7 @@ terraform import litellm_model.gpt4 <model-id>
 ```
 
 Note: The model ID is generated when the model is created and is different from the `model_name`.
+
+## Security Note
+
+When using this resource, ensure that sensitive information such as API keys and AWS credentials are stored securely. It's recommended to use environment variables or a secure secret management solution rather than hardcoding these values in your Terraform configuration files.
