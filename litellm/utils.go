@@ -1,6 +1,7 @@
 package litellm
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -50,4 +51,30 @@ func handleAPIResponse(resp *http.Response, reqBody interface{}) (*ModelResponse
 	}
 
 	return &modelResp, nil
+}
+
+// MakeRequest is a helper function to make HTTP requests
+func MakeRequest(config *ProviderConfig, method, endpoint string, body interface{}) (*http.Response, error) {
+	var req *http.Request
+	var err error
+
+	if body != nil {
+		jsonData, err := json.Marshal(body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal request body: %w", err)
+		}
+		req, err = http.NewRequest(method, fmt.Sprintf("%s%s", config.APIBase, endpoint), bytes.NewBuffer(jsonData))
+	} else {
+		req, err = http.NewRequest(method, fmt.Sprintf("%s%s", config.APIBase, endpoint), nil)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-api-key", config.APIKey)
+
+	client := &http.Client{}
+	return client.Do(req)
 }

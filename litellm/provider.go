@@ -9,7 +9,7 @@ func Provider() *schema.Provider {
 	return &schema.Provider{
 		ResourcesMap: map[string]*schema.Resource{
 			"litellm_model":       resourceLiteLLMModel(),
-			"litellm_team":        resourceLiteLLMTeam(),
+			"litellm_team":        ResourceLiteLLMTeam(),
 			"litellm_team_member": resourceLiteLLMTeamMember(),
 		},
 		Schema: map[string]*schema.Schema{

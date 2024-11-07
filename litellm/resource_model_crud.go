@@ -10,6 +10,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+const (
+	endpointModelNew    = "/model/new"
+	endpointModelUpdate = "/model/update"
+	endpointModelInfo   = "/model/info"
+	endpointModelDelete = "/model/delete"
+)
+
 func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) error {
 	config := m.(*ProviderConfig)
 
@@ -23,11 +30,9 @@ func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) e
 	modelName := fmt.Sprintf("%s/%s", customLLMProvider, baseModel)
 
 	// Generate a UUID for new models
-	var modelID string
+	modelID := d.Id()
 	if !isUpdate {
 		modelID = uuid.New().String()
-	} else {
-		modelID = d.Id()
 	}
 
 	modelReq := ModelRequest{
@@ -56,28 +61,14 @@ func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) e
 		Additional: make(map[string]interface{}),
 	}
 
-	jsonData, err := json.Marshal(modelReq)
-	if err != nil {
-		return err
-	}
-
-	endpoint := "/model/new"
+	endpoint := endpointModelNew
 	if isUpdate {
-		endpoint = "/model/update"
+		endpoint = endpointModelUpdate
 	}
 
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s%s", config.APIBase, endpoint), bytes.NewBuffer(jsonData))
+	resp, err := makeRequest(config, "POST", endpoint, modelReq)
 	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-api-key", config.APIKey)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
+		return fmt.Errorf("failed to %s model: %w", map[bool]string{true: "update", false: "create"}[isUpdate], err)
 	}
 	defer resp.Body.Close()
 
@@ -86,7 +77,7 @@ func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) e
 		if isUpdate && err.Error() == "model_not_found" {
 			return createOrUpdateModel(d, m, false)
 		}
-		return fmt.Errorf("failed to %s model: %v", map[bool]string{true: "update", false: "create"}[isUpdate], err)
+		return fmt.Errorf("failed to %s model: %w", map[bool]string{true: "update", false: "create"}[isUpdate], err)
 	}
 
 	d.SetId(modelID)
@@ -102,17 +93,9 @@ func resourceLiteLLMModelCreate(d *schema.ResourceData, m interface{}) error {
 func resourceLiteLLMModelRead(d *schema.ResourceData, m interface{}) error {
 	config := m.(*ProviderConfig)
 
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/model/info?litellm_model_id=%s", config.APIBase, d.Id()), nil)
+	resp, err := makeRequest(config, "GET", fmt.Sprintf("%s?litellm_model_id=%s", endpointModelInfo, d.Id()), nil)
 	if err != nil {
-		return err
-	}
-
-	req.Header.Set("x-api-key", config.APIKey)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
+		return fmt.Errorf("failed to read model: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -122,7 +105,7 @@ func resourceLiteLLMModelRead(d *schema.ResourceData, m interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("failed to read model: %v", err)
+		return fmt.Errorf("failed to read model: %w", err)
 	}
 
 	// Update the state with values from the response
@@ -155,23 +138,9 @@ func resourceLiteLLMModelDelete(d *schema.ResourceData, m interface{}) error {
 		ID: d.Id(),
 	}
 
-	jsonData, err := json.Marshal(deleteReq)
+	resp, err := makeRequest(config, "POST", endpointModelDelete, deleteReq)
 	if err != nil {
-		return err
-	}
-
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/model/delete", config.APIBase), bytes.NewBuffer(jsonData))
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-api-key", config.APIKey)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
+		return fmt.Errorf("failed to delete model: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -181,9 +150,34 @@ func resourceLiteLLMModelDelete(d *schema.ResourceData, m interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("failed to delete model: %v", err)
+		return fmt.Errorf("failed to delete model: %w", err)
 	}
 
 	d.SetId("")
 	return nil
+}
+
+func makeRequest(config *ProviderConfig, method, endpoint string, body interface{}) (*http.Response, error) {
+	var req *http.Request
+	var err error
+
+	if body != nil {
+		jsonData, err := json.Marshal(body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal request body: %w", err)
+		}
+		req, err = http.NewRequest(method, fmt.Sprintf("%s%s", config.APIBase, endpoint), bytes.NewBuffer(jsonData))
+	} else {
+		req, err = http.NewRequest(method, fmt.Sprintf("%s%s", config.APIBase, endpoint), nil)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-api-key", config.APIKey)
+
+	client := &http.Client{}
+	return client.Do(req)
 }
