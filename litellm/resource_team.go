@@ -114,15 +114,30 @@ func resourceLiteLLMTeamRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("error decoding team info response: %w", err)
 	}
 
-	d.Set("team_alias", teamResp.TeamAlias)
-	d.Set("organization_id", teamResp.OrganizationID)
-	d.Set("metadata", teamResp.Metadata)
-	d.Set("tpm_limit", teamResp.TPMLimit)
-	d.Set("rpm_limit", teamResp.RPMLimit)
-	d.Set("max_budget", teamResp.MaxBudget)
-	d.Set("budget_duration", teamResp.BudgetDuration)
-	d.Set("models", teamResp.Models)
-	d.Set("blocked", teamResp.Blocked)
+	// Update the state with values from the response or fall back to the data passed in during creation
+	d.Set("team_alias", GetStringValue(teamResp.TeamAlias, d.Get("team_alias").(string)))
+	d.Set("organization_id", GetStringValue(teamResp.OrganizationID, d.Get("organization_id").(string)))
+
+	// Handle metadata separately as it's a map
+	if teamResp.Metadata != nil {
+		d.Set("metadata", teamResp.Metadata)
+	} else {
+		d.Set("metadata", d.Get("metadata"))
+	}
+
+	d.Set("tpm_limit", GetIntValue(teamResp.TPMLimit, d.Get("tpm_limit").(int)))
+	d.Set("rpm_limit", GetIntValue(teamResp.RPMLimit, d.Get("rpm_limit").(int)))
+	d.Set("max_budget", GetFloatValue(teamResp.MaxBudget, d.Get("max_budget").(float64)))
+	d.Set("budget_duration", GetStringValue(teamResp.BudgetDuration, d.Get("budget_duration").(string)))
+
+	// Handle models separately as it's a list
+	if teamResp.Models != nil {
+		d.Set("models", teamResp.Models)
+	} else {
+		d.Set("models", d.Get("models"))
+	}
+
+	d.Set("blocked", GetBoolValue(teamResp.Blocked, d.Get("blocked").(bool)))
 
 	log.Printf("[INFO] Successfully read team with ID: %s", d.Id())
 	return nil

@@ -78,3 +78,29 @@ func MakeRequest(config *ProviderConfig, method, endpoint string, body interface
 	client := &http.Client{}
 	return client.Do(req)
 }
+
+// Helper functions to handle potential nil values from the API response
+func GetStringValue(apiValue, defaultValue string) string {
+	if apiValue != "" {
+		return apiValue
+	}
+	return defaultValue
+}
+
+func GetIntValue(apiValue, defaultValue int) int {
+	if apiValue != 0 {
+		return apiValue
+	}
+	return defaultValue
+}
+
+func GetFloatValue(apiValue, defaultValue float64) float64 {
+	if apiValue != 0 {
+		return apiValue
+	}
+	return defaultValue
+}
+
+func GetBoolValue(apiValue, defaultValue bool) bool {
+	return apiValue
+}
