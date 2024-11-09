@@ -6,19 +6,13 @@ Manages a team configuration in LiteLLM. Teams allow you to group users and mana
 
 ```hcl
 resource "litellm_team" "engineering" {
-  team_alias = "engineering-team"
-  models     = ["gpt-4-proxy", "claude-2"]
+  team_alias      = "engineering-team"
+  organization_id = "org_123456"
+  models          = ["gpt-4-proxy", "claude-2"]
 
-  members_with_roles {
-    role       = "admin"
-    user_id    = "user_1"
-    user_email = "admin@example.com"
-  }
-
-  members_with_roles {
-    role       = "user"
-    user_id    = "user_2"
-    user_email = "member@example.com"
+  metadata = {
+    department = "Engineering"
+    project    = "AI Research"
   }
 
   blocked         = false
@@ -35,14 +29,11 @@ The following arguments are supported:
 
 * `team_alias` - (Required) A human-readable identifier for the team.
 
-* `models` - (Required) List of model names that this team can access.
+* `organization_id` - (Optional) The ID of the organization this team belongs to.
 
-* `members_with_roles` - (Required) List of team members and their roles. Each block supports:
-  * `role` - (Required) The role of the team member. Valid values are:
-    * `admin`
-    * `user`
-  * `user_id` - (Required) Unique identifier for the user.
-  * `user_email` - (Required) Email address of the user.
+* `models` - (Optional) List of model names that this team can access.
+
+* `metadata` - (Optional) A map of metadata key-value pairs associated with the team.
 
 * `blocked` - (Optional) Whether the team is blocked from making requests. Default is `false`.
 
@@ -62,11 +53,18 @@ The following arguments are supported:
 
 In addition to the arguments above, the following attributes are exported:
 
-* `team_id` - The unique identifier for the team.
+* `id` - The unique identifier for the team.
 
 ## Import
 
 Teams can be imported using the team ID:
 
 ```shell
-terraform import litellm_team.engineering team_123456
+terraform import litellm_team.engineering <team-id>
+```
+
+Note: The team ID is generated when the team is created and is different from the `team_alias`.
+
+## Note on Team Members
+
+Team members are managed through the separate `litellm_team_member` resource. This allows for more granular control over team membership and permissions. See the `litellm_team_member` resource documentation for details on managing team members.

@@ -1,13 +1,17 @@
 package litellm
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+const (
+	endpointModelNew    = "/model/new"
+	endpointModelUpdate = "/model/update"
+	endpointModelInfo   = "/model/info"
+	endpointModelDelete = "/model/delete"
 )
 
 func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) error {
@@ -23,11 +27,9 @@ func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) e
 	modelName := fmt.Sprintf("%s/%s", customLLMProvider, baseModel)
 
 	// Generate a UUID for new models
-	var modelID string
+	modelID := d.Id()
 	if !isUpdate {
 		modelID = uuid.New().String()
-	} else {
-		modelID = d.Id()
 	}
 
 	modelReq := ModelRequest{
@@ -56,28 +58,14 @@ func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) e
 		Additional: make(map[string]interface{}),
 	}
 
-	jsonData, err := json.Marshal(modelReq)
-	if err != nil {
-		return err
-	}
-
-	endpoint := "/model/new"
+	endpoint := endpointModelNew
 	if isUpdate {
-		endpoint = "/model/update"
+		endpoint = endpointModelUpdate
 	}
 
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s%s", config.APIBase, endpoint), bytes.NewBuffer(jsonData))
+	resp, err := MakeRequest(config, "POST", endpoint, modelReq)
 	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-api-key", config.APIKey)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
+		return fmt.Errorf("failed to %s model: %w", map[bool]string{true: "update", false: "create"}[isUpdate], err)
 	}
 	defer resp.Body.Close()
 
@@ -86,7 +74,7 @@ func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) e
 		if isUpdate && err.Error() == "model_not_found" {
 			return createOrUpdateModel(d, m, false)
 		}
-		return fmt.Errorf("failed to %s model: %v", map[bool]string{true: "update", false: "create"}[isUpdate], err)
+		return fmt.Errorf("failed to %s model: %w", map[bool]string{true: "update", false: "create"}[isUpdate], err)
 	}
 
 	d.SetId(modelID)
@@ -102,17 +90,9 @@ func resourceLiteLLMModelCreate(d *schema.ResourceData, m interface{}) error {
 func resourceLiteLLMModelRead(d *schema.ResourceData, m interface{}) error {
 	config := m.(*ProviderConfig)
 
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/model/info?litellm_model_id=%s", config.APIBase, d.Id()), nil)
+	resp, err := MakeRequest(config, "GET", fmt.Sprintf("%s?litellm_model_id=%s", endpointModelInfo, d.Id()), nil)
 	if err != nil {
-		return err
-	}
-
-	req.Header.Set("x-api-key", config.APIKey)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
+		return fmt.Errorf("failed to read model: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -122,22 +102,29 @@ func resourceLiteLLMModelRead(d *schema.ResourceData, m interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("failed to read model: %v", err)
+		return fmt.Errorf("failed to read model: %w", err)
 	}
 
-	// Update the state with values from the response
-	d.Set("model_name", modelResp.ModelName)
-	d.Set("custom_llm_provider", modelResp.LiteLLMParams.CustomLLMProvider)
-	d.Set("tpm", modelResp.LiteLLMParams.TPM)
-	d.Set("rpm", modelResp.LiteLLMParams.RPM)
-	d.Set("model_api_base", modelResp.LiteLLMParams.APIBase)
-	d.Set("api_version", modelResp.LiteLLMParams.APIVersion)
-	d.Set("base_model", modelResp.ModelInfo.BaseModel)
-	d.Set("tier", modelResp.ModelInfo.Tier)
-	d.Set("mode", modelResp.ModelInfo.Mode)
-	d.Set("aws_access_key_id", modelResp.LiteLLMParams.AWSAccessKeyID)
-	d.Set("aws_secret_access_key", modelResp.LiteLLMParams.AWSSecretAccessKey)
-	d.Set("aws_region_name", modelResp.LiteLLMParams.AWSRegionName)
+	// Update the state with values from the response or fall back to the data passed in during creation
+	d.Set("model_name", GetStringValue(modelResp.ModelName, d.Get("model_name").(string)))
+	d.Set("custom_llm_provider", GetStringValue(modelResp.LiteLLMParams.CustomLLMProvider, d.Get("custom_llm_provider").(string)))
+	d.Set("tpm", GetIntValue(modelResp.LiteLLMParams.TPM, d.Get("tpm").(int)))
+	d.Set("rpm", GetIntValue(modelResp.LiteLLMParams.RPM, d.Get("rpm").(int)))
+	d.Set("model_api_base", GetStringValue(modelResp.LiteLLMParams.APIBase, d.Get("model_api_base").(string)))
+	d.Set("api_version", GetStringValue(modelResp.LiteLLMParams.APIVersion, d.Get("api_version").(string)))
+	d.Set("base_model", GetStringValue(modelResp.ModelInfo.BaseModel, d.Get("base_model").(string)))
+	d.Set("tier", GetStringValue(modelResp.ModelInfo.Tier, d.Get("tier").(string)))
+	d.Set("mode", GetStringValue(modelResp.ModelInfo.Mode, d.Get("mode").(string)))
+
+	// Store sensitive information
+	d.Set("model_api_key", d.Get("model_api_key"))
+	d.Set("aws_access_key_id", d.Get("aws_access_key_id"))
+	d.Set("aws_secret_access_key", d.Get("aws_secret_access_key"))
+	d.Set("aws_region_name", GetStringValue(modelResp.LiteLLMParams.AWSRegionName, d.Get("aws_region_name").(string)))
+
+	// Store cost information
+	d.Set("input_cost_per_million_tokens", d.Get("input_cost_per_million_tokens"))
+	d.Set("output_cost_per_million_tokens", d.Get("output_cost_per_million_tokens"))
 
 	return nil
 }
@@ -155,23 +142,9 @@ func resourceLiteLLMModelDelete(d *schema.ResourceData, m interface{}) error {
 		ID: d.Id(),
 	}
 
-	jsonData, err := json.Marshal(deleteReq)
+	resp, err := MakeRequest(config, "POST", endpointModelDelete, deleteReq)
 	if err != nil {
-		return err
-	}
-
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/model/delete", config.APIBase), bytes.NewBuffer(jsonData))
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-api-key", config.APIKey)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
+		return fmt.Errorf("failed to delete model: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -181,7 +154,7 @@ func resourceLiteLLMModelDelete(d *schema.ResourceData, m interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("failed to delete model: %v", err)
+		return fmt.Errorf("failed to delete model: %w", err)
 	}
 
 	d.SetId("")
