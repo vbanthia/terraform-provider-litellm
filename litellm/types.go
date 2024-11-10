@@ -31,32 +31,32 @@ type ModelRequest struct {
 
 // TeamResponse represents a response from the API containing team information.
 type TeamResponse struct {
-	TeamID         string                 `json:"team_id"`
-	TeamAlias      string                 `json:"team_alias"`
-	OrganizationID string                 `json:"organization_id"`
-	Metadata       map[string]interface{} `json:"metadata"`
-	TPMLimit       int                    `json:"tpm_limit"`
-	RPMLimit       int                    `json:"rpm_limit"`
-	MaxBudget      float64                `json:"max_budget"`
-	BudgetDuration string                 `json:"budget_duration"`
+	TeamID         string                 `json:"team_id,omitempty"`
+	TeamAlias      string                 `json:"team_alias,omitempty"`
+	OrganizationID string                 `json:"organization_id,omitempty"`
+	Metadata       map[string]interface{} `json:"metadata,omitempty"`
+	TPMLimit       int                    `json:"tpm_limit,omitempty"`
+	RPMLimit       int                    `json:"rpm_limit,omitempty"`
+	MaxBudget      float64                `json:"max_budget,omitempty"`
+	BudgetDuration string                 `json:"budget_duration,omitempty"`
 	Models         []string               `json:"models"`
-	Blocked        bool                   `json:"blocked"`
+	Blocked        bool                   `json:"blocked,omitempty"`
 }
 
 // LiteLLMParams represents the parameters for LiteLLM.
 type LiteLLMParams struct {
 	CustomLLMProvider  string  `json:"custom_llm_provider"`
-	TPM                int     `json:"tpm"`
-	RPM                int     `json:"rpm"`
-	APIKey             string  `json:"api_key"`
-	APIBase            string  `json:"api_base"`
-	APIVersion         string  `json:"api_version"`
+	TPM                int     `json:"tpm,omitempty"`
+	RPM                int     `json:"rpm,omitempty"`
+	APIKey             string  `json:"api_key,omitempty"`
+	APIBase            string  `json:"api_base,omitempty"`
+	APIVersion         string  `json:"api_version,omitempty"`
 	Model              string  `json:"model"`
 	InputCostPerToken  float64 `json:"input_cost_per_token"`
 	OutputCostPerToken float64 `json:"output_cost_per_token"`
-	AWSAccessKeyID     string  `json:"aws_access_key_id"`
-	AWSSecretAccessKey string  `json:"aws_secret_access_key"`
-	AWSRegionName      string  `json:"aws_region_name"`
+	AWSAccessKeyID     string  `json:"aws_access_key_id,omitempty"`
+	AWSSecretAccessKey string  `json:"aws_secret_access_key,omitempty"`
+	AWSRegionName      string  `json:"aws_region_name,omitempty"`
 }
 
 // ModelInfo represents information about a model.
