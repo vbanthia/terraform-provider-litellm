@@ -15,7 +15,10 @@ const (
 )
 
 func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) error {
-	config := m.(*ProviderConfig)
+	client, ok := m.(*Client)
+	if !ok {
+		return fmt.Errorf("invalid type assertion for client")
+	}
 
 	// Convert cost per million tokens to cost per token
 	inputCostPerToken := d.Get("input_cost_per_million_tokens").(float64) / 1000000.0
@@ -63,7 +66,7 @@ func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) e
 		endpoint = endpointModelUpdate
 	}
 
-	resp, err := MakeRequest(config, "POST", endpoint, modelReq)
+	resp, err := MakeRequest(client, "POST", endpoint, modelReq)
 	if err != nil {
 		return fmt.Errorf("failed to %s model: %w", map[bool]string{true: "update", false: "create"}[isUpdate], err)
 	}
@@ -88,9 +91,12 @@ func resourceLiteLLMModelCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceLiteLLMModelRead(d *schema.ResourceData, m interface{}) error {
-	config := m.(*ProviderConfig)
+	client, ok := m.(*Client)
+	if !ok {
+		return fmt.Errorf("invalid type assertion for client")
+	}
 
-	resp, err := MakeRequest(config, "GET", fmt.Sprintf("%s?litellm_model_id=%s", endpointModelInfo, d.Id()), nil)
+	resp, err := MakeRequest(client, "GET", fmt.Sprintf("%s?litellm_model_id=%s", endpointModelInfo, d.Id()), nil)
 	if err != nil {
 		return fmt.Errorf("failed to read model: %w", err)
 	}
@@ -134,7 +140,10 @@ func resourceLiteLLMModelUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceLiteLLMModelDelete(d *schema.ResourceData, m interface{}) error {
-	config := m.(*ProviderConfig)
+	client, ok := m.(*Client)
+	if !ok {
+		return fmt.Errorf("invalid type assertion for client")
+	}
 
 	deleteReq := struct {
 		ID string `json:"id"`
@@ -142,7 +151,7 @@ func resourceLiteLLMModelDelete(d *schema.ResourceData, m interface{}) error {
 		ID: d.Id(),
 	}
 
-	resp, err := MakeRequest(config, "POST", endpointModelDelete, deleteReq)
+	resp, err := MakeRequest(client, "POST", endpointModelDelete, deleteReq)
 	if err != nil {
 		return fmt.Errorf("failed to delete model: %w", err)
 	}

@@ -11,6 +11,7 @@ func Provider() *schema.Provider {
 			"litellm_model":       resourceLiteLLMModel(),
 			"litellm_team":        ResourceLiteLLMTeam(),
 			"litellm_team_member": resourceLiteLLMTeamMember(),
+			"litellm_key":         resourceKey(),
 		},
 		Schema: map[string]*schema.Schema{
 			"api_base": {
@@ -39,5 +40,5 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		APIKey:  d.Get("api_key").(string),
 	}
 
-	return &config, nil
+	return NewClient(config.APIBase, config.APIKey), nil
 }

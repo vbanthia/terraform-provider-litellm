@@ -1,12 +1,8 @@
 package litellm
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -52,7 +48,7 @@ func resourceLiteLLMTeamMember() *schema.Resource {
 }
 
 func resourceLiteLLMTeamMemberCreate(d *schema.ResourceData, m interface{}) error {
-	config := m.(*ProviderConfig)
+	client := m.(*Client)
 
 	memberData := map[string]interface{}{
 		"member": []map[string]interface{}{
@@ -66,33 +62,16 @@ func resourceLiteLLMTeamMemberCreate(d *schema.ResourceData, m interface{}) erro
 		"max_budget_in_team": d.Get("max_budget_in_team").(float64),
 	}
 
-	jsonData, err := json.Marshal(memberData)
+	log.Printf("[DEBUG] Create team member request payload: %+v", memberData)
+
+	resp, err := MakeRequest(client, "POST", "/team/member_add", memberData)
 	if err != nil {
-		return fmt.Errorf("error marshalling team member data: %v", err)
-	}
-
-	log.Printf("[DEBUG] Create team member request payload: %s", string(jsonData))
-
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/team/member_add", config.APIBase), bytes.NewBuffer(jsonData))
-	if err != nil {
-		return fmt.Errorf("error creating request: %v", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-api-key", config.APIKey)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("error making request: %v", err)
+		return fmt.Errorf("error creating team member: %v", err)
 	}
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
-	log.Printf("[DEBUG] Create team member response: Status: %s, Body: %s", resp.Status, string(body))
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error creating team member: %s - %s", resp.Status, string(body))
+	if err := handleResponse(resp, "creating team member"); err != nil {
+		return err
 	}
 
 	// Set a composite ID since there's no specific member ID returned
@@ -112,7 +91,7 @@ func resourceLiteLLMTeamMemberRead(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceLiteLLMTeamMemberUpdate(d *schema.ResourceData, m interface{}) error {
-	config := m.(*ProviderConfig)
+	client := m.(*Client)
 
 	updateData := map[string]interface{}{
 		"user_id":            d.Get("user_id").(string),
@@ -121,33 +100,16 @@ func resourceLiteLLMTeamMemberUpdate(d *schema.ResourceData, m interface{}) erro
 		"max_budget_in_team": d.Get("max_budget_in_team").(float64),
 	}
 
-	jsonData, err := json.Marshal(updateData)
+	log.Printf("[DEBUG] Update team member request payload: %+v", updateData)
+
+	resp, err := MakeRequest(client, "POST", "/team/member_update", updateData)
 	if err != nil {
-		return fmt.Errorf("error marshalling team member update data: %v", err)
-	}
-
-	log.Printf("[DEBUG] Update team member request payload: %s", string(jsonData))
-
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/team/member_update", config.APIBase), bytes.NewBuffer(jsonData))
-	if err != nil {
-		return fmt.Errorf("error creating request: %v", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-api-key", config.APIKey)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("error making request: %v", err)
+		return fmt.Errorf("error updating team member: %v", err)
 	}
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
-	log.Printf("[DEBUG] Update team member response: Status: %s, Body: %s", resp.Status, string(body))
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error updating team member: %s - %s", resp.Status, string(body))
+	if err := handleResponse(resp, "updating team member"); err != nil {
+		return err
 	}
 
 	log.Printf("[INFO] Successfully updated team member with ID: %s", d.Id())
@@ -156,7 +118,7 @@ func resourceLiteLLMTeamMemberUpdate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceLiteLLMTeamMemberDelete(d *schema.ResourceData, m interface{}) error {
-	config := m.(*ProviderConfig)
+	client := m.(*Client)
 
 	deleteData := map[string]interface{}{
 		"user_id":    d.Get("user_id").(string),
@@ -164,33 +126,16 @@ func resourceLiteLLMTeamMemberDelete(d *schema.ResourceData, m interface{}) erro
 		"team_id":    d.Get("team_id").(string),
 	}
 
-	jsonData, err := json.Marshal(deleteData)
+	log.Printf("[DEBUG] Delete team member request payload: %+v", deleteData)
+
+	resp, err := MakeRequest(client, "POST", "/team/member_delete", deleteData)
 	if err != nil {
-		return fmt.Errorf("error marshalling team member delete data: %v", err)
-	}
-
-	log.Printf("[DEBUG] Delete team member request payload: %s", string(jsonData))
-
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/team/member_delete", config.APIBase), bytes.NewBuffer(jsonData))
-	if err != nil {
-		return fmt.Errorf("error creating request: %v", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-api-key", config.APIKey)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("error making request: %v", err)
+		return fmt.Errorf("error deleting team member: %v", err)
 	}
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
-	log.Printf("[DEBUG] Delete team member response: Status: %s, Body: %s", resp.Status, string(body))
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error deleting team member: %s - %s", resp.Status, string(body))
+	if err := handleResponse(resp, "deleting team member"); err != nil {
+		return err
 	}
 
 	log.Printf("[INFO] Successfully deleted team member with ID: %s", d.Id())

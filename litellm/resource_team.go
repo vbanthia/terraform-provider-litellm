@@ -69,14 +69,14 @@ func ResourceLiteLLMTeam() *schema.Resource {
 }
 
 func resourceLiteLLMTeamCreate(d *schema.ResourceData, m interface{}) error {
-	config := m.(*ProviderConfig)
+	client := m.(*Client)
 
 	teamID := uuid.New().String()
 	teamData := buildTeamData(d, teamID)
 
 	log.Printf("[DEBUG] Create team request payload: %+v", teamData)
 
-	resp, err := MakeRequest(config, "POST", endpointTeamNew, teamData)
+	resp, err := MakeRequest(client, "POST", endpointTeamNew, teamData)
 	if err != nil {
 		return fmt.Errorf("error creating team: %w", err)
 	}
@@ -93,11 +93,11 @@ func resourceLiteLLMTeamCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceLiteLLMTeamRead(d *schema.ResourceData, m interface{}) error {
-	config := m.(*ProviderConfig)
+	client := m.(*Client)
 
 	log.Printf("[INFO] Reading team with ID: %s", d.Id())
 
-	resp, err := MakeRequest(config, "GET", fmt.Sprintf("%s?team_id=%s", endpointTeamInfo, d.Id()), nil)
+	resp, err := MakeRequest(client, "GET", fmt.Sprintf("%s?team_id=%s", endpointTeamInfo, d.Id()), nil)
 	if err != nil {
 		return fmt.Errorf("error reading team: %w", err)
 	}
@@ -144,12 +144,12 @@ func resourceLiteLLMTeamRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceLiteLLMTeamUpdate(d *schema.ResourceData, m interface{}) error {
-	config := m.(*ProviderConfig)
+	client := m.(*Client)
 
 	teamData := buildTeamData(d, d.Id())
 	log.Printf("[DEBUG] Update team request payload: %+v", teamData)
 
-	resp, err := MakeRequest(config, "POST", endpointTeamUpdate, teamData)
+	resp, err := MakeRequest(client, "POST", endpointTeamUpdate, teamData)
 	if err != nil {
 		return fmt.Errorf("error updating team: %w", err)
 	}
@@ -164,7 +164,7 @@ func resourceLiteLLMTeamUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceLiteLLMTeamDelete(d *schema.ResourceData, m interface{}) error {
-	config := m.(*ProviderConfig)
+	client := m.(*Client)
 
 	log.Printf("[INFO] Deleting team with ID: %s", d.Id())
 
@@ -172,7 +172,7 @@ func resourceLiteLLMTeamDelete(d *schema.ResourceData, m interface{}) error {
 		"team_ids": []string{d.Id()},
 	}
 
-	resp, err := MakeRequest(config, "POST", endpointTeamDelete, deleteData)
+	resp, err := MakeRequest(client, "POST", endpointTeamDelete, deleteData)
 	if err != nil {
 		return fmt.Errorf("error deleting team: %w", err)
 	}

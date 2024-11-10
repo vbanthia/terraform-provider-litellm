@@ -54,7 +54,7 @@ func handleAPIResponse(resp *http.Response, reqBody interface{}) (*ModelResponse
 }
 
 // MakeRequest is a helper function to make HTTP requests
-func MakeRequest(config *ProviderConfig, method, endpoint string, body interface{}) (*http.Response, error) {
+func MakeRequest(client *Client, method, endpoint string, body interface{}) (*http.Response, error) {
 	var req *http.Request
 	var err error
 
@@ -63,9 +63,9 @@ func MakeRequest(config *ProviderConfig, method, endpoint string, body interface
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal request body: %w", err)
 		}
-		req, err = http.NewRequest(method, fmt.Sprintf("%s%s", config.APIBase, endpoint), bytes.NewBuffer(jsonData))
+		req, err = http.NewRequest(method, fmt.Sprintf("%s%s", client.APIBase, endpoint), bytes.NewBuffer(jsonData))
 	} else {
-		req, err = http.NewRequest(method, fmt.Sprintf("%s%s", config.APIBase, endpoint), nil)
+		req, err = http.NewRequest(method, fmt.Sprintf("%s%s", client.APIBase, endpoint), nil)
 	}
 
 	if err != nil {
@@ -73,10 +73,9 @@ func MakeRequest(config *ProviderConfig, method, endpoint string, body interface
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-api-key", config.APIKey)
+	req.Header.Set("x-api-key", client.APIKey)
 
-	client := &http.Client{}
-	return client.Do(req)
+	return client.httpClient.Do(req)
 }
 
 // Helper functions to handle potential nil values from the API response

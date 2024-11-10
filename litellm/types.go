@@ -21,6 +21,14 @@ type ModelResponse struct {
 	Additional    map[string]interface{} `json:"additional"`
 }
 
+// ModelRequest represents a request to create or update a model.
+type ModelRequest struct {
+	ModelName     string                 `json:"model_name"`
+	LiteLLMParams LiteLLMParams          `json:"litellm_params"`
+	ModelInfo     ModelInfo              `json:"model_info"`
+	Additional    map[string]interface{} `json:"additional"`
+}
+
 // TeamResponse represents a response from the API containing team information.
 type TeamResponse struct {
 	TeamID         string                 `json:"team_id"`
@@ -33,14 +41,6 @@ type TeamResponse struct {
 	BudgetDuration string                 `json:"budget_duration"`
 	Models         []string               `json:"models"`
 	Blocked        bool                   `json:"blocked"`
-}
-
-// ModelRequest represents a request to create or update a model.
-type ModelRequest struct {
-	ModelName     string                 `json:"model_name"`
-	LiteLLMParams LiteLLMParams          `json:"litellm_params"`
-	ModelInfo     ModelInfo              `json:"model_info"`
-	Additional    map[string]interface{} `json:"additional"`
 }
 
 // LiteLLMParams represents the parameters for LiteLLM.
@@ -68,4 +68,35 @@ type ModelInfo struct {
 	Mode      string `json:"mode"`
 }
 
-// Add any other type definitions here as needed
+// Key represents a LiteLLM API key.
+type Key struct {
+	Key                  string                 `json:"key,omitempty"`
+	Models               []string               `json:"models"`
+	Spend                float64                `json:"spend"`
+	MaxBudget            float64                `json:"max_budget"`
+	UserID               string                 `json:"user_id,omitempty"`
+	TeamID               string                 `json:"team_id,omitempty"`
+	MaxParallelRequests  int                    `json:"max_parallel_requests"`
+	Metadata             map[string]interface{} `json:"metadata"`
+	TPMLimit             int                    `json:"tpm_limit"`
+	RPMLimit             int                    `json:"rpm_limit"`
+	BudgetDuration       string                 `json:"budget_duration"`
+	AllowedCacheControls []string               `json:"allowed_cache_controls,omitempty"`
+	SoftBudget           float64                `json:"soft_budget"`
+	KeyAlias             string                 `json:"key_alias"`
+	Duration             string                 `json:"duration,omitempty"`
+	Aliases              map[string]interface{} `json:"aliases"`
+	Config               map[string]interface{} `json:"config"`
+	Permissions          map[string]interface{} `json:"permissions"`
+	ModelMaxBudget       map[string]interface{} `json:"model_max_budget"`
+	ModelRPMLimit        map[string]interface{} `json:"model_rpm_limit"`
+	ModelTPMLimit        map[string]interface{} `json:"model_tpm_limit"`
+	Guardrails           []string               `json:"guardrails"`
+	Blocked              bool                   `json:"blocked"`
+	Tags                 []string               `json:"tags,omitempty"`
+}
+
+// KeyResponse represents a response from the API containing key information.
+type KeyResponse struct {
+	Key string `json:"key"`
+}
