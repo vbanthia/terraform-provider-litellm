@@ -48,7 +48,7 @@ The following arguments are supported:
 
 * `mode` - (Optional) The intended use of the model. Valid values are:
   * `completion`
-  * `embeddings`
+  * `embedding`
   * `image_generation`
   * `moderation`
   * `audio_transcription`

@@ -9,7 +9,7 @@ This Terraform provider allows you to manage LiteLLM resources through Infrastru
 - Configure team members and their permissions
 - Set usage limits and budgets
 - Control access to specific models
-- Specify model modes (e.g., completion, embeddings, image generation)
+- Specify model modes (e.g., completion, embedding, image generation)
 - Manage API keys with fine-grained controls
 
 ## Requirements

@@ -56,7 +56,7 @@ func resourceLiteLLMModel() *schema.Resource {
 				Optional: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"completion",
-					"embeddings",
+					"embedding",
 					"image_generation",
 					"moderation",
 					"audio_transcription",
