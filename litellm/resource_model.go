@@ -65,32 +65,26 @@ func resourceLiteLLMModel() *schema.Resource {
 			"input_cost_per_million_tokens": {
 				Type:     schema.TypeFloat,
 				Optional: true,
-				Default:  0.0,
 			},
 			"output_cost_per_million_tokens": {
 				Type:     schema.TypeFloat,
 				Optional: true,
-				Default:  0.0,
 			},
 			"input_cost_per_pixel": {
 				Type:     schema.TypeFloat,
 				Optional: true,
-				Default:  0.0,
 			},
 			"output_cost_per_pixel": {
 				Type:     schema.TypeFloat,
 				Optional: true,
-				Default:  0.0,
 			},
 			"input_cost_per_second": {
 				Type:     schema.TypeFloat,
 				Optional: true,
-				Default:  0.0,
 			},
 			"output_cost_per_second": {
 				Type:     schema.TypeFloat,
 				Optional: true,
-				Default:  0.0,
 			},
 			"aws_access_key_id": {
 				Type:      schema.TypeString,
