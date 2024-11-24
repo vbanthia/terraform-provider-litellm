@@ -72,6 +72,26 @@ func resourceLiteLLMModel() *schema.Resource {
 				Optional: true,
 				Default:  0.0,
 			},
+			"input_cost_per_pixel": {
+				Type:     schema.TypeFloat,
+				Optional: true,
+				Default:  0.0,
+			},
+			"output_cost_per_pixel": {
+				Type:     schema.TypeFloat,
+				Optional: true,
+				Default:  0.0,
+			},
+			"input_cost_per_second": {
+				Type:     schema.TypeFloat,
+				Optional: true,
+				Default:  0.0,
+			},
+			"output_cost_per_second": {
+				Type:     schema.TypeFloat,
+				Optional: true,
+				Default:  0.0,
+			},
 			"aws_access_key_id": {
 				Type:      schema.TypeString,
 				Optional:  true,
@@ -83,6 +103,20 @@ func resourceLiteLLMModel() *schema.Resource {
 				Sensitive: true,
 			},
 			"aws_region_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"vertex_project": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+			},
+			"vertex_location": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+			},
+			"vertex_credentials": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
