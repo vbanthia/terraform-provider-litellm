@@ -29,6 +29,15 @@ func resourceLiteLLMModel() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
+			"reasoning_effort": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"low",
+					"medium",
+					"high",
+				}, false),
+			},
 			"model_api_key": {
 				Type:      schema.TypeString,
 				Optional:  true,
@@ -58,6 +67,7 @@ func resourceLiteLLMModel() *schema.Resource {
 					"completion",
 					"embedding",
 					"image_generation",
+					"chat",
 					"moderation",
 					"audio_transcription",
 				}, false),

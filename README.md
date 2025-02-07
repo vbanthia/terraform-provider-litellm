@@ -26,7 +26,7 @@ terraform {
   required_providers {
     litellm = {
       source  = "litellm/litellm"
-      version = "~> 1.0.0"
+      version = "~> 0.2.2"
     }
   }
 }
@@ -47,7 +47,8 @@ resource "litellm_model" "gpt4" {
   model_api_base      = "https://api.openai.com/v1"
   base_model          = "gpt-4"
   tier                = "paid"
-  mode                = "completion"
+  mode                = "chat"
+  reasoning_effort    = "medium"  # Optional: "low", "medium", or "high"
   
   input_cost_per_million_tokens  = 30.0
   output_cost_per_million_tokens = 60.0
