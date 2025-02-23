@@ -14,6 +14,7 @@ resource "litellm_model" "gpt4" {
   base_model          = "gpt-4"
   tier                = "paid"
   mode                = "completion"
+  reasoning_effort    = "medium"
   tpm                 = 100000
   rpm                 = 1000
   
