@@ -48,6 +48,7 @@ type LiteLLMParams struct {
 	CustomLLMProvider   string  `json:"custom_llm_provider"`
 	TPM                 int     `json:"tpm,omitempty"`
 	RPM                 int     `json:"rpm,omitempty"`
+	ReasoningEffort     string  `json:"reasoning_effort,omitempty"`
 	APIKey              string  `json:"api_key,omitempty"`
 	APIBase             string  `json:"api_base,omitempty"`
 	APIVersion          string  `json:"api_version,omitempty"`

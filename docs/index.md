@@ -9,7 +9,7 @@ terraform {
   required_providers {
     litellm = {
       source  = "bitop/litellm"
-      version = "1.0.0"
+      version = "~> 0.2.3"
     }
   }
 }
@@ -17,6 +17,23 @@ terraform {
 provider "litellm" {
   api_base = "http://your-litellm-instance:4000"
   api_key  = "your-api-key"
+}
+
+# Example Model Configuration
+
+```hcl
+resource "litellm_model" "example" {
+  model_name          = "gpt-4-proxy"
+  custom_llm_provider = "openai"
+  model_api_key       = var.openai_api_key
+  model_api_base      = "https://api.openai.com/v1"
+  base_model          = "gpt-4"
+  tier                = "paid"
+  mode                = "chat"
+  reasoning_effort    = "medium"  # Optional: "low", "medium", or "high"
+  
+  input_cost_per_million_tokens  = 30.0
+  output_cost_per_million_tokens = 60.0
 }
 ```
 

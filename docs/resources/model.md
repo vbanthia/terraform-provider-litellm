@@ -14,6 +14,7 @@ resource "litellm_model" "gpt4" {
   base_model          = "gpt-4"
   tier                = "paid"
   mode                = "completion"
+  reasoning_effort    = "medium"
   tpm                 = 100000
   rpm                 = 1000
   
@@ -50,12 +51,18 @@ The following arguments are supported:
   * `completion`
   * `embedding`
   * `image_generation`
+  * `chat`
   * `moderation`
   * `audio_transcription`
 
 * `tpm` - (Optional) Tokens per minute limit for this model.
 
 * `rpm` - (Optional) Requests per minute limit for this model.
+
+* `reasoning_effort` - (Optional) Configures the model's reasoning effort level. Valid values are:
+  * `low`
+  * `medium`
+  * `high`
 
 * `input_cost_per_million_tokens` - (Optional) Cost per million input tokens. This will be automatically converted to the per-token cost required by the API.
 

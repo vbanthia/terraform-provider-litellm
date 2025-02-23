@@ -11,6 +11,7 @@ This Terraform provider allows you to manage LiteLLM resources through Infrastru
 - Control access to specific models
 - Specify model modes (e.g., completion, embedding, image generation)
 - Manage API keys with fine-grained controls
+- Support for reasoning effort configuration in the model resource
 
 ## Requirements
 
@@ -19,14 +20,14 @@ This Terraform provider allows you to manage LiteLLM resources through Infrastru
 
 ## Using the Provider
 
-To use the LiteLLM provider in your Terraform configuration, you need to declare it in the `terraform` block:
+To use the LiteLLM provider in your Terraform configuration, you need to declare it in the <code>terraform</code> block:
 
 ```hcl
 terraform {
   required_providers {
     litellm = {
-      source  = "litellm/litellm"
-      version = "~> 1.0.0"
+      source  = "ncecere/litellm"
+      version = "~> 0.2.3"
     }
   }
 }
@@ -47,14 +48,15 @@ resource "litellm_model" "gpt4" {
   model_api_base      = "https://api.openai.com/v1"
   base_model          = "gpt-4"
   tier                = "paid"
-  mode                = "completion"
+  mode                = "chat"
+  reasoning_effort    = "medium"  # Optional: "low", "medium", or "high"
   
   input_cost_per_million_tokens  = 30.0
   output_cost_per_million_tokens = 60.0
 }
 ```
 
-For full details on the `litellm_model` resource, see the [model resource documentation](docs/resources/model.md).
+For full details on the <code>litellm_model</code> resource, see the [model resource documentation](docs/resources/model.md).
 
 Here's an example of creating an API key with various options:
 
@@ -99,35 +101,35 @@ resource "litellm_key" "example_key" {
 }
 ```
 
-The `litellm_key` resource supports the following options:
+The <code>litellm_key</code> resource supports the following options:
 
-- `models`: List of allowed models for this key
-- `max_budget`: Maximum budget for the key
-- `user_id` and `team_id`: Associate the key with a user and team
-- `max_parallel_requests`: Limit concurrent requests
-- `tpm_limit` and `rpm_limit`: Set tokens and requests per minute limits
-- `budget_duration`: Specify budget duration (e.g., "monthly", "weekly")
-- `key_alias`: Set a friendly name for the key
-- `duration`: Set the key's validity period
-- `metadata`: Add custom metadata to the key
-- `allowed_cache_controls`: Specify allowed cache control directives
-- `soft_budget`: Set a soft budget limit
-- `aliases`: Define model aliases
-- `config`: Set configuration options
-- `permissions`: Specify key permissions
-- `model_max_budget`, `model_rpm_limit`, `model_tpm_limit`: Set per-model limits
-- `guardrails`: Apply specific guardrails to the key
-- `blocked`: Flag to block/unblock the key
-- `tags`: Add tags for organization and filtering
+- <code>models</code>: List of allowed models for this key
+- <code>max_budget</code>: Maximum budget for the key
+- <code>user_id</code> and <code>team_id</code>: Associate the key with a user and team
+- <code>max_parallel_requests</code>: Limit concurrent requests
+- <code>tpm_limit</code> and <code>rpm_limit</code>: Set tokens and requests per minute limits
+- <code>budget_duration</code>: Specify budget duration (e.g., "monthly", "weekly")
+- <code>key_alias</code>: Set a friendly name for the key
+- <code>duration</code>: Set the key's validity period
+- <code>metadata</code>: Add custom metadata to the key
+- <code>allowed_cache_controls</code>: Specify allowed cache control directives
+- <code>soft_budget</code>: Set a soft budget limit
+- <code>aliases</code>: Define model aliases
+- <code>config</code>: Set configuration options
+- <code>permissions</code>: Specify key permissions
+- <code>model_max_budget</code>, <code>model_rpm_limit</code>, <code>model_tpm_limit</code>: Set per-model limits
+- <code>guardrails</code>: Apply specific guardrails to the key
+- <code>blocked</code>: Flag to block/unblock the key
+- <code>tags</code>: Add tags for organization and filtering
 
-For full details on the `litellm_key` resource, see the [key resource documentation](docs/resources/key.md).
+For full details on the <code>litellm_key</code> resource, see the [key resource documentation](docs/resources/key.md).
 
 ### Available Resources
 
-- `litellm_model`: Manage model configurations. [Documentation](docs/resources/model.md)
-- `litellm_team`: Manage teams. [Documentation](docs/resources/team.md)
-- `litellm_team_member`: Manage team members. [Documentation](docs/resources/team_member.md)
-- `litellm_key`: Manage API keys. [Documentation](docs/resources/key.md)
+- <code>litellm_model</code>: Manage model configurations. [Documentation](docs/resources/model.md)
+- <code>litellm_team</code>: Manage teams. [Documentation](docs/resources/team.md)
+- <code>litellm_team_member</code>: Manage team members. [Documentation](docs/resources/team_member.md)
+- <code>litellm_key</code>: Manage API keys. [Documentation](docs/resources/key.md)
 
 ## Development
 
@@ -156,17 +158,17 @@ terraform-provider-litellm/
 
 ### Building the Provider
 
-1. Clone the repository
+1. Clone the repository:
 ```sh
 git clone https://github.com/your-username/terraform-provider-litellm.git
 ```
 
-2. Enter the repository directory
+2. Enter the repository directory:
 ```sh
 cd terraform-provider-litellm
 ```
 
-3. Build and install the provider
+3. Build and install the provider:
 ```sh
 make install
 ```
@@ -186,7 +188,6 @@ The Makefile provides several useful commands for development:
 ### Testing
 
 To run the tests:
-
 ```sh
 make test
 ```
@@ -204,4 +205,4 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 - Always use environment variables or secure secret management solutions to handle sensitive information like API keys and AWS credentials.
 - Refer to the `examples/` directory for more detailed usage examples.
 - Make sure to keep your provider version updated for the latest features and bug fixes.
-- Recent updates have improved the handling of the Key resource to ensure all values are correctly persisted in the Terraform state.
+- v0.2.3 introduces support for the <code>reasoning_effort</code> attribute in the <code>litellm_model</code> resource. This attribute accepts "low", "medium", or "high" to control the model's reasoning effort.
