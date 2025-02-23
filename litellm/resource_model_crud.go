@@ -57,6 +57,7 @@ func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) e
 			VertexProject:       d.Get("vertex_project").(string),
 			VertexLocation:      d.Get("vertex_location").(string),
 			VertexCredentials:   d.Get("vertex_credentials").(string),
+			ReasoningEffort:     d.Get("reasoning_effort").(string),
 		},
 		ModelInfo: ModelInfo{
 			ID:        modelID,
