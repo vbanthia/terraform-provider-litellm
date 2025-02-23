@@ -9,7 +9,7 @@ terraform {
   required_providers {
     litellm = {
       source  = "bitop/litellm"
-      version = "0.2.2"
+      version = "~> 0.2.3"
     }
   }
 }
