@@ -35,6 +35,15 @@ func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) e
 		modelID = uuid.New().String()
 	}
 
+	// Create thinking configuration if enabled
+	var thinking map[string]interface{}
+	if d.Get("thinking_enabled").(bool) {
+		thinking = map[string]interface{}{
+			"type":          "enabled",
+			"budget_tokens": d.Get("thinking_budget_tokens").(int),
+		}
+	}
+
 	modelReq := ModelRequest{
 		ModelName: d.Get("model_name").(string),
 		LiteLLMParams: LiteLLMParams{
@@ -58,6 +67,7 @@ func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) e
 			VertexLocation:      d.Get("vertex_location").(string),
 			VertexCredentials:   d.Get("vertex_credentials").(string),
 			ReasoningEffort:     d.Get("reasoning_effort").(string),
+			Thinking:            thinking,
 		},
 		ModelInfo: ModelInfo{
 			ID:        modelID,
@@ -139,6 +149,18 @@ func resourceLiteLLMModelRead(d *schema.ResourceData, m interface{}) error {
 	// Store cost information
 	d.Set("input_cost_per_million_tokens", d.Get("input_cost_per_million_tokens"))
 	d.Set("output_cost_per_million_tokens", d.Get("output_cost_per_million_tokens"))
+
+	// Handle thinking configuration
+	if modelResp.LiteLLMParams.Thinking != nil {
+		if thinkingType, ok := modelResp.LiteLLMParams.Thinking["type"].(string); ok && thinkingType == "enabled" {
+			d.Set("thinking_enabled", true)
+			if budgetTokens, ok := modelResp.LiteLLMParams.Thinking["budget_tokens"].(float64); ok {
+				d.Set("thinking_budget_tokens", int(budgetTokens))
+			}
+		}
+	} else {
+		d.Set("thinking_enabled", false)
+	}
 
 	return nil
 }

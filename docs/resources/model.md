@@ -15,6 +15,8 @@ resource "litellm_model" "gpt4" {
   tier                = "paid"
   mode                = "completion"
   reasoning_effort    = "medium"
+  thinking_enabled    = true
+  thinking_budget_tokens = 1024
   tpm                 = 100000
   rpm                 = 1000
   
@@ -63,6 +65,10 @@ The following arguments are supported:
   * `low`
   * `medium`
   * `high`
+
+* `thinking_enabled` - (Optional) Enables the model's thinking capability. Default is `false`.
+
+* `thinking_budget_tokens` - (Optional) Sets the token budget for the model's thinking capability. Default is `1024`.
 
 * `input_cost_per_million_tokens` - (Optional) Cost per million input tokens. This will be automatically converted to the per-token cost required by the API.
 

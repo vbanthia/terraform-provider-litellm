@@ -38,6 +38,16 @@ func resourceLiteLLMModel() *schema.Resource {
 					"high",
 				}, false),
 			},
+			"thinking_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"thinking_budget_tokens": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  1024,
+			},
 			"model_api_key": {
 				Type:      schema.TypeString,
 				Optional:  true,
