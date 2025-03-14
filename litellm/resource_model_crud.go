@@ -157,9 +157,13 @@ func resourceLiteLLMModelRead(d *schema.ResourceData, m interface{}) error {
 			if budgetTokens, ok := modelResp.LiteLLMParams.Thinking["budget_tokens"].(float64); ok {
 				d.Set("thinking_budget_tokens", int(budgetTokens))
 			}
+		} else {
+			d.Set("thinking_enabled", false)
+			// Don't set thinking_budget_tokens when thinking is not enabled
 		}
 	} else {
 		d.Set("thinking_enabled", false)
+		// Don't set thinking_budget_tokens when thinking is not enabled
 	}
 
 	return nil

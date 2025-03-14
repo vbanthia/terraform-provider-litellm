@@ -47,6 +47,10 @@ func resourceLiteLLMModel() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  1024,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Only include thinking_budget_tokens in the diff if thinking_enabled is true
+					return !d.Get("thinking_enabled").(bool)
+				},
 			},
 			"model_api_key": {
 				Type:      schema.TypeString,

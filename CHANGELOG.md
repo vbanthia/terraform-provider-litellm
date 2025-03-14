@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `thinking_enabled` - Boolean to enable/disable thinking capability (default: false)
   - `thinking_budget_tokens` - Integer to set token budget for thinking (default: 1024)
 
+### Fixed
+- Fixed issue where `thinking_budget_tokens` was being added to models that don't have `thinking_enabled = true`
+
 ## [0.2.2] - 2025-02-06
 
 ### Added
