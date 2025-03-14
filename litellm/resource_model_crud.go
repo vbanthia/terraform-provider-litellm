@@ -47,27 +47,28 @@ func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) e
 	modelReq := ModelRequest{
 		ModelName: d.Get("model_name").(string),
 		LiteLLMParams: LiteLLMParams{
-			CustomLLMProvider:   customLLMProvider,
-			TPM:                 d.Get("tpm").(int),
-			RPM:                 d.Get("rpm").(int),
-			APIKey:              d.Get("model_api_key").(string),
-			APIBase:             d.Get("model_api_base").(string),
-			APIVersion:          d.Get("api_version").(string),
-			Model:               modelName,
-			InputCostPerToken:   inputCostPerToken,
-			OutputCostPerToken:  outputCostPerToken,
-			InputCostPerPixel:   d.Get("input_cost_per_pixel").(float64),
-			OutputCostPerPixel:  d.Get("output_cost_per_pixel").(float64),
-			InputCostPerSecond:  d.Get("input_cost_per_second").(float64),
-			OutputCostPerSecond: d.Get("output_cost_per_second").(float64),
-			AWSAccessKeyID:      d.Get("aws_access_key_id").(string),
-			AWSSecretAccessKey:  d.Get("aws_secret_access_key").(string),
-			AWSRegionName:       d.Get("aws_region_name").(string),
-			VertexProject:       d.Get("vertex_project").(string),
-			VertexLocation:      d.Get("vertex_location").(string),
-			VertexCredentials:   d.Get("vertex_credentials").(string),
-			ReasoningEffort:     d.Get("reasoning_effort").(string),
-			Thinking:            thinking,
+			CustomLLMProvider:              customLLMProvider,
+			TPM:                            d.Get("tpm").(int),
+			RPM:                            d.Get("rpm").(int),
+			APIKey:                         d.Get("model_api_key").(string),
+			APIBase:                        d.Get("model_api_base").(string),
+			APIVersion:                     d.Get("api_version").(string),
+			Model:                          modelName,
+			InputCostPerToken:              inputCostPerToken,
+			OutputCostPerToken:             outputCostPerToken,
+			InputCostPerPixel:              d.Get("input_cost_per_pixel").(float64),
+			OutputCostPerPixel:             d.Get("output_cost_per_pixel").(float64),
+			InputCostPerSecond:             d.Get("input_cost_per_second").(float64),
+			OutputCostPerSecond:            d.Get("output_cost_per_second").(float64),
+			AWSAccessKeyID:                 d.Get("aws_access_key_id").(string),
+			AWSSecretAccessKey:             d.Get("aws_secret_access_key").(string),
+			AWSRegionName:                  d.Get("aws_region_name").(string),
+			VertexProject:                  d.Get("vertex_project").(string),
+			VertexLocation:                 d.Get("vertex_location").(string),
+			VertexCredentials:              d.Get("vertex_credentials").(string),
+			ReasoningEffort:                d.Get("reasoning_effort").(string),
+			Thinking:                       thinking,
+			MergeReasoningContentInChoices: d.Get("merge_reasoning_content_in_choices").(bool),
 		},
 		ModelInfo: ModelInfo{
 			ID:        modelID,
@@ -165,6 +166,9 @@ func resourceLiteLLMModelRead(d *schema.ResourceData, m interface{}) error {
 		d.Set("thinking_enabled", false)
 		// Don't set thinking_budget_tokens when thinking is not enabled
 	}
+
+	// Handle merge_reasoning_content_in_choices
+	d.Set("merge_reasoning_content_in_choices", modelResp.LiteLLMParams.MergeReasoningContentInChoices)
 
 	return nil
 }

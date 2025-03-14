@@ -52,6 +52,10 @@ func resourceLiteLLMModel() *schema.Resource {
 					return !d.Get("thinking_enabled").(bool)
 				},
 			},
+			"merge_reasoning_content_in_choices": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"model_api_key": {
 				Type:      schema.TypeString,
 				Optional:  true,
