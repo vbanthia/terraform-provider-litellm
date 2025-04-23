@@ -2,6 +2,7 @@ package litellm
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -100,6 +101,9 @@ func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) e
 	}
 
 	d.SetId(modelID)
+
+	// Add a delay to allow the model to be registered in the LiteLLM proxy
+	time.Sleep(2 * time.Second)
 
 	// Read back the resource to ensure the state is consistent
 	return resourceLiteLLMModelRead(d, m)
