@@ -103,7 +103,9 @@ func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) e
 	d.SetId(modelID)
 
 	// Add a delay to allow the model to be registered in the LiteLLM proxy
-	time.Sleep(2 * time.Second)
+	fmt.Printf("Model created with ID %s. Waiting 5 seconds for LiteLLM proxy to register the model...\n", modelID)
+	time.Sleep(5 * time.Second)
+	fmt.Printf("Wait complete. Proceeding to read the model...\n")
 
 	// Read back the resource to ensure the state is consistent
 	return resourceLiteLLMModelRead(d, m)
