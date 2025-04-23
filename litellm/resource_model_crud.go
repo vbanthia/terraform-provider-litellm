@@ -152,23 +152,41 @@ func resourceLiteLLMModelRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("output_cost_per_million_tokens", d.Get("output_cost_per_million_tokens"))
 
 	// Handle thinking configuration
-	if modelResp.LiteLLMParams.Thinking != nil {
-		if thinkingType, ok := modelResp.LiteLLMParams.Thinking["type"].(string); ok && thinkingType == "enabled" {
-			d.Set("thinking_enabled", true)
-			if budgetTokens, ok := modelResp.LiteLLMParams.Thinking["budget_tokens"].(float64); ok {
-				d.Set("thinking_budget_tokens", int(budgetTokens))
+	if _, ok := d.GetOk("thinking_enabled"); ok {
+		// Keep the existing value from state
+		thinkingEnabled := d.Get("thinking_enabled").(bool)
+		d.Set("thinking_enabled", thinkingEnabled)
+
+		// Only set thinking_budget_tokens if thinking is enabled and we have a value in state
+		if thinkingEnabled {
+			if _, ok := d.GetOk("thinking_budget_tokens"); ok {
+				d.Set("thinking_budget_tokens", d.Get("thinking_budget_tokens").(int))
+			}
+		}
+	} else {
+		// Fall back to API response if no state value exists
+		if modelResp.LiteLLMParams.Thinking != nil {
+			if thinkingType, ok := modelResp.LiteLLMParams.Thinking["type"].(string); ok && thinkingType == "enabled" {
+				d.Set("thinking_enabled", true)
+				if budgetTokens, ok := modelResp.LiteLLMParams.Thinking["budget_tokens"].(float64); ok {
+					d.Set("thinking_budget_tokens", int(budgetTokens))
+				}
+			} else {
+				d.Set("thinking_enabled", false)
 			}
 		} else {
 			d.Set("thinking_enabled", false)
-			// Don't set thinking_budget_tokens when thinking is not enabled
 		}
-	} else {
-		d.Set("thinking_enabled", false)
-		// Don't set thinking_budget_tokens when thinking is not enabled
 	}
 
-	// Handle merge_reasoning_content_in_choices
-	d.Set("merge_reasoning_content_in_choices", modelResp.LiteLLMParams.MergeReasoningContentInChoices)
+	// Handle merge_reasoning_content_in_choices - preserve state value if not returned by API
+	if _, ok := d.GetOk("merge_reasoning_content_in_choices"); ok {
+		// Keep the existing value from state
+		d.Set("merge_reasoning_content_in_choices", d.Get("merge_reasoning_content_in_choices").(bool))
+	} else {
+		// Only set from API response if we don't have a value in state
+		d.Set("merge_reasoning_content_in_choices", modelResp.LiteLLMParams.MergeReasoningContentInChoices)
+	}
 
 	return nil
 }
