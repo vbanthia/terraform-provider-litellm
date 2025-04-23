@@ -2,11 +2,49 @@ package litellm
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+// retryModelRead attempts to read a model with exponential backoff
+func retryModelRead(d *schema.ResourceData, m interface{}, maxRetries int) error {
+	var err error
+	delay := 1 * time.Second
+	maxDelay := 10 * time.Second
+
+	for i := 0; i < maxRetries; i++ {
+		log.Printf("[INFO] Attempting to read model (attempt %d/%d)", i+1, maxRetries)
+
+		err = resourceLiteLLMModelRead(d, m)
+		if err == nil {
+			log.Printf("[INFO] Successfully read model after %d attempts", i+1)
+			return nil
+		}
+
+		// Check if this is a "model not found" error
+		if err.Error() != "failed to read model: API request failed: Status: 400 Bad Request, Response: {\"detail\":{\"error\":\"Model id = "+d.Id()+" not found on litellm proxy\"}}, Request: null" {
+			// If it's a different error, don't retry
+			return err
+		}
+
+		if i < maxRetries-1 {
+			log.Printf("[INFO] Model not found yet, retrying in %v...", delay)
+			time.Sleep(delay)
+
+			// Exponential backoff with a maximum delay
+			delay *= 2
+			if delay > maxDelay {
+				delay = maxDelay
+			}
+		}
+	}
+
+	log.Printf("[WARN] Failed to read model after %d attempts: %v", maxRetries, err)
+	return err
+}
 
 const (
 	endpointModelNew    = "/model/new"
@@ -102,13 +140,9 @@ func createOrUpdateModel(d *schema.ResourceData, m interface{}, isUpdate bool) e
 
 	d.SetId(modelID)
 
-	// Add a delay to allow the model to be registered in the LiteLLM proxy
-	fmt.Printf("Model created with ID %s. Waiting 5 seconds for LiteLLM proxy to register the model...\n", modelID)
-	time.Sleep(5 * time.Second)
-	fmt.Printf("Wait complete. Proceeding to read the model...\n")
-
-	// Read back the resource to ensure the state is consistent
-	return resourceLiteLLMModelRead(d, m)
+	log.Printf("[INFO] Model created with ID %s. Starting retry mechanism to read the model...", modelID)
+	// Read back the resource with retries to ensure the state is consistent
+	return retryModelRead(d, m, 5)
 }
 
 func resourceLiteLLMModelCreate(d *schema.ResourceData, m interface{}) error {
