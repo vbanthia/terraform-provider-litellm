@@ -1,4 +1,4 @@
-module github.com/nicholas-cecere/terraform-provider-litellm
+module github.com/vbanthia/terraform-provider-litellm
 
 go 1.23
 
