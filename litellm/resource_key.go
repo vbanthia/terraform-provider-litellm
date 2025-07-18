@@ -2,6 +2,7 @@ package litellm
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -16,6 +17,11 @@ func resourceKey() *schema.Resource {
 		DeleteContext: resourceKeyDelete,
 		Schema: map[string]*schema.Schema{
 			"key": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
+			"actual_key": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -142,14 +148,33 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, m interface{
 		return diag.FromErr(fmt.Errorf("error creating key: %s", err))
 	}
 
-	d.SetId(createdKey.Key)
+	// Store the actual key for internal use
+	d.Set("actual_key", createdKey.Key)
+	
+	// Use key alias if available, otherwise generate a hash of the key
+	var resourceID string
+	if createdKey.KeyAlias != "" {
+		resourceID = createdKey.KeyAlias
+	} else {
+		// Generate a SHA256 hash of the key for the resource ID
+		hash := sha256.Sum256([]byte(createdKey.Key))
+		resourceID = fmt.Sprintf("%x", hash)[:16] // Use first 16 chars of hash
+	}
+	d.SetId(resourceID)
 	return resourceKeyRead(ctx, d, m)
 }
 
 func resourceKeyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
 
-	key, err := c.GetKey(d.Id())
+	// Use the stored actual key for API calls
+	actualKey := d.Get("actual_key").(string)
+	if actualKey == "" {
+		// If actual_key is not set, this might be an import or old resource
+		return diag.FromErr(fmt.Errorf("actual key not found in state, resource may need to be recreated"))
+	}
+
+	key, err := c.GetKey(actualKey)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error reading key: %s", err))
 	}
@@ -160,13 +185,21 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, m interface{})
 	}
 
 	mapKeyToResourceData(d, key)
+	// Ensure actual_key is preserved in state
+	d.Set("actual_key", key.Key)
 	return nil
 }
 
 func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
 
-	key := &Key{Key: d.Id()}
+	// Use the stored actual key for API calls
+	actualKey := d.Get("actual_key").(string)
+	if actualKey == "" {
+		return diag.FromErr(fmt.Errorf("actual key not found in state, resource may need to be recreated"))
+	}
+
+	key := &Key{Key: actualKey}
 	mapResourceDataToKey(d, key)
 
 	_, err := c.UpdateKey(key)
@@ -180,7 +213,13 @@ func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 func resourceKeyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*Client)
 
-	err := c.DeleteKey(d.Id())
+	// Use the stored actual key for API calls
+	actualKey := d.Get("actual_key").(string)
+	if actualKey == "" {
+		return diag.FromErr(fmt.Errorf("actual key not found in state, resource may need to be recreated"))
+	}
+
+	err := c.DeleteKey(actualKey)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error deleting key: %s", err))
 	}
@@ -217,6 +256,7 @@ func mapResourceDataToKey(d *schema.ResourceData, key *Key) {
 
 func mapKeyToResourceData(d *schema.ResourceData, key *Key) {
 	d.Set("key", key.Key)
+	d.Set("actual_key", key.Key)
 
 	if len(key.Models) > 0 {
 		d.Set("models", key.Models)
