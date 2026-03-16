@@ -58,7 +58,6 @@ func resourceLiteLLMTeamMemberAddCreate(d *schema.ResourceData, m interface{}) e
 
 	teamID := d.Get("team_id").(string)
 	members := d.Get("member").(*schema.Set)
-	maxBudget := d.Get("max_budget_in_team").(float64)
 
 	// Convert members to the expected format
 	membersList := make([]map[string]interface{}, 0, members.Len())
@@ -77,9 +76,12 @@ func resourceLiteLLMTeamMemberAddCreate(d *schema.ResourceData, m interface{}) e
 	}
 
 	memberData := map[string]interface{}{
-		"member":             membersList,
-		"team_id":            teamID,
-		"max_budget_in_team": maxBudget,
+		"member":  membersList,
+		"team_id": teamID,
+	}
+
+	if v, ok := d.GetOk("max_budget_in_team"); ok {
+		memberData["max_budget_in_team"] = v.(float64)
 	}
 
 	log.Printf("[DEBUG] Create team members request payload: %+v", memberData)
@@ -109,7 +111,6 @@ func resourceLiteLLMTeamMemberAddRead(d *schema.ResourceData, m interface{}) err
 func resourceLiteLLMTeamMemberAddUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 	teamID := d.Get("team_id").(string)
-	maxBudget := d.Get("max_budget_in_team").(float64)
 
 	o, n := d.GetChange("member")
 	oldMembers := o.(*schema.Set)
@@ -158,9 +159,12 @@ func resourceLiteLLMTeamMemberAddUpdate(d *schema.ResourceData, m interface{}) e
 		}
 
 		memberData := map[string]interface{}{
-			"member":             membersList,
-			"team_id":            teamID,
-			"max_budget_in_team": maxBudget,
+			"member":  membersList,
+			"team_id": teamID,
+		}
+
+		if v, ok := d.GetOk("max_budget_in_team"); ok {
+			memberData["max_budget_in_team"] = v.(float64)
 		}
 
 		log.Printf("[DEBUG] Adding new team members request payload: %+v", memberData)
